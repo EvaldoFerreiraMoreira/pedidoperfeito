@@ -1,0 +1,26 @@
+# Arquivo .gitignore
+
+# Ignorar arquivo .env
+.env
+
+# Ignorar arquivos temporários
+*.log
+*.tmp
+*.temp
+
+# Ignorar diretórios de ambiente virtual Python
+venv/
+.env/
+
+# Ignorar arquivos compilados Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar diretórios de configuração do editor
+.vscode/
+.idea/
+
+# Ignorar arquivos de pacotes
+node_modules/
