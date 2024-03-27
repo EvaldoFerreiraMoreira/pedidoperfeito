@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: pedidoperfeito
-    env: python
-    plan: starter
-    buildCommand: pip install -r requirements.txt
-    startCommand: python flask_api.py
