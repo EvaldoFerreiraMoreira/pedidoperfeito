@@ -7,7 +7,7 @@ st.set_page_config(layout='wide')
 st.title("Siad.AI Chat")
 
 # Endereço do servidor Flask (ajuste conforme necessário)
-FLASK_SERVER_URL = "http://localhost:5000/chat_with_data"
+FLASK_SERVER_URL = "https://pedidoperfeito.vercel.app/chat_with_data"
 
 def fetch_data(cnpj, email):
     data = {'cnpj': cnpj, 'email': email, 'prompt': 'Digite sua consulta'}
