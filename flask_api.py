@@ -73,5 +73,9 @@ def api_chat_with_data():
     result = chat_with_data(df, prompt)
     return jsonify({"response": result})
 
+@app.route('/')
+def home():
+    return "Servidor Rodando"
+
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)
