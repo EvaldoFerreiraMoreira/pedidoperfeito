@@ -4,4 +4,4 @@ services:
     env: python
     plan: starter
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn flask_api:app
+    startCommand: python flask_api.py
