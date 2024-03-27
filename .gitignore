@@ -24,3 +24,4 @@ __pycache__/
 
 # Ignorar arquivos de pacotes
 node_modules/
+.vercel
