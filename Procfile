@@ -1,1 +1,1 @@
-gunicorn flaskApi:app
+web: gunicorn flaskApi:app
