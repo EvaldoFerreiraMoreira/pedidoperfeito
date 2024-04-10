@@ -11,6 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 def json_to_dataframe(data, prefix=''):
+    print(f"Convertendo JSON para DataFrame: {data}")  # Debug print
     def flatten_json(y, prefix=''):
         out = {}
         def flatten(x, name=''):
@@ -28,18 +29,23 @@ def json_to_dataframe(data, prefix=''):
         return out
 
     flat_data = flatten_json(data)
-    return pd.DataFrame([flat_data])
+    df = pd.DataFrame([flat_data])
+    print(f"DataFrame resultante: {df}")  # Debug print
+    return df
 
 def chat_with_data(df, prompt):
+    print(f"Iniciando chat com dados - DataFrame: {df}, Prompt: {prompt}")  # Debug print
     from pandasai.llm.openai import OpenAI
     from pandasai import PandasAI
     prompt_in_portuguese = "Responda em português: " + prompt
     llm = OpenAI(api_token=openai_api_key)
     pandas_ai = PandasAI(llm)
     result = pandas_ai.run(df, prompt=prompt_in_portuguese)
+    print(f"Resultado do chat: {result}")  # Debug print
     return result
 
 def fetch_data(cnpj, email):
+    print(f"Recebendo dados para CNPJ: {cnpj}, Email: {email}")  # Debug print
     empresa = "5"  # Assumindo que o código da empresa é sempre 5, ajuste conforme necessário
     base_url = f"https://fjinfor.ddns.net/fvendas/api/api_busca_cli.php?funcao=get_buscacli&empresa={empresa}&cnpj={cnpj}&email={email}"
     
@@ -47,20 +53,28 @@ def fetch_data(cnpj, email):
         response = requests.get(base_url)
         response.raise_for_status()
         data_json = response.json()
+        print(f"Resposta inicial da API: {data_json}")  # Debug print
         cliente_id = data_json['dados'][0]['id'] if data_json['dados'] else None
         
-        print("Cliente ID:", cliente_id)
+        print(f"Cliente ID: {cliente_id}")  # Debug print
 
-        if cliente_id:
-            detalhe_url = f"https://fjinfor.ddns.net/fvendas/api/api_sitpedido.php?funcao=get_sitpedido&cliente={cliente_id}"
-            response_detalhe = requests.get(detalhe_url)
-            response_detalhe.raise_for_status()
-            detalhe_data_json = response_detalhe.json()
-            df = json_to_dataframe(detalhe_data_json)
-            return df, cliente_id
-        else:
-            return pd.DataFrame(), None
+        urls = [
+            f"https://fjinfor.ddns.net/fvendas/api/api_sitpedido.php?funcao=get_sitpedido&cliente={cliente_id}",
+            f"https://fjinfor.ddns.net/fvendas/api/api_sit_boleto.php?funcao=get_sitboleto_1&cliente={cliente_id}"
+        ]
+
+        dfs = []
+        for url in urls:
+            response = requests.get(url)
+            response.raise_for_status()
+            data_json = response.json()
+            df = json_to_dataframe(data_json)
+            dfs.append(df)
+
+        combined_df = pd.concat(dfs, axis=1)
+        return combined_df, cliente_id
     except requests.RequestException as e:
+        print(f"Erro na requisição: {e}")  # Debug print
         return pd.DataFrame(), None
 
 @app.route('/chat_with_data', methods=['POST'])
@@ -70,12 +84,19 @@ def api_chat_with_data():
     email = content.get('email')
     prompt = content.get('prompt')
     
+    print(f"Dados recebidos - CNPJ: {cnpj}, Email: {email}, Prompt: {prompt}")  # Debug print
+    
+    # Primeiro, busque os dados e o ID do cliente
     df, cliente_id = fetch_data(cnpj, email)
+    
+    if prompt.lower() == "cadastro":
+        return jsonify({"response": "Olá, como posso ajudar?", "cliente_id": cliente_id})
+    
     if df.empty:
+        print("DataFrame vazio após tentativa de busca.")  # Debug print
         return jsonify({"error": "Nenhum dado encontrado para o cliente especificado"}), 404
     
     result = chat_with_data(df, prompt)
-    # Inclui o cliente_id na resposta
     return jsonify({"response": result, "cliente_id": cliente_id})
 
 @app.route('/')
