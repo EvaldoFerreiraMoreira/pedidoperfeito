@@ -46,8 +46,17 @@ def chat_with_data(df, prompt):
 
 def fetch_data(cnpj, email):
     print(f"Recebendo dados para CNPJ: {cnpj}, Email: {email}")  # Debug print
-    empresa = "5"  # Assumindo que o código da empresa é sempre 5, ajuste conforme necessário
-    base_url = f"https://fjinfor.ddns.net/fvendas/api/api_busca_cli.php?funcao=get_buscacli&empresa={empresa}&cnpj={cnpj}&email={email}"
+    empresaId = "fb978f9a-4480-45e4-b4dd-fe06a099b487"
+    # URL de configuração (ajuste conforme necessário para a URL da API de configuração)
+    config_url = f"http://192.168.0.105:8080/V1/api/empresa/findconfiguracaobyempresaid/{empresaId}"
+    try:
+        config_response = requests.get(config_url)
+        config_response.raise_for_status()
+        config_data = config_response.json()
+        base_url = config_data['url_loc_cli'].format(cnpj=cnpj, email=email)
+    except requests.RequestException as e:
+        print(f"Erro ao buscar a URL dinâmica: {e}")  # Debug print
+        return pd.DataFrame(), None
     
     try:
         response = requests.get(base_url)
