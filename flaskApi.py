@@ -96,10 +96,11 @@ def api_chat_with_data():
     cnpj = content.get('cnpj')
     email = content.get('email')
     prompt = content.get('prompt')
+    empresaId = content.get('empresaId')
     
-    print(f"Dados recebidos - CNPJ: {cnpj}, Email: {email}, Prompt: {prompt}")  # Debug print
+    print(f"Dados recebidos - CNPJ: {cnpj}, Email: {email}, Prompt: {prompt}, empresaId: {empresaId}")  # Debug print
     
-    df, cliente_id, nome_cliente, empresaId = fetch_data(cnpj, email)
+    df, cliente_id, nome_cliente, empresaId = fetch_data(cnpj, email, empresaId)
     
     print(f"ClienteId DE BAIXO: {cliente_id}")
     print(f"Nome Cliente DE BAIXO: {nome_cliente}")
