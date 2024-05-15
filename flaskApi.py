@@ -47,8 +47,8 @@ def chat_with_data(df, prompt):
 def fetch_data(cnpj, email, empresaId):
     print(f"Recebendo dados para CNPJ: {cnpj}, Email: {email}")
 
-    config_url = f"http://172.19.0.10:8080/V1/api/empresa/findconfiguracaobyempresaid/{empresaId}"
-    find_urls = f"http://172.19.0.10:8080/V1/api/api/findbyempresa/{empresaId}"
+    config_url = f"http://192.168.0.105:8080/V1/api/empresa/findconfiguracaobyempresaid/{empresaId}"
+    find_urls = f"http://192.168.0.105:8080/V1/api/api/findbyempresa/{empresaId}"
 
     try:
         config_response = requests.get(config_url)
@@ -61,14 +61,19 @@ def fetch_data(cnpj, email, empresaId):
         data_json = response.json()
         print(f"Resposta inicial da API: {data_json}")
 
-        cliente_id = data_json['dados'][0]['id'] if data_json['dados'] else None
-        nome_cliente = data_json['dados'][0]['nome'] if data_json['dados'] else None
+        clientes = data_json.get('dados', [])
+        if not clientes:
+            raise ValueError("Nenhum cliente encontrado")
 
-           # Obtendo URLs do segundo endpoint
+        cliente = clientes[0]
+        cliente_id = cliente.get('id')
+        nome_cliente = cliente.get('nome')
+
+        # Obtendo URLs do segundo endpoint
         config_response2 = requests.get(find_urls)
         config_response2.raise_for_status()
         config_data2 = config_response2.json()
-        urls = [item['url'] for item in config_data2]
+        urls = [item['url'].format(cliente_id=cliente_id) for item in config_data2]  # Passando o cliente_id dinamicamente
 
         dfs = []
         for url in urls:
@@ -88,7 +93,10 @@ def fetch_data(cnpj, email, empresaId):
 
     except requests.RequestException as e:
         print(f"Erro na requisição: {e}")
-        return pd.DataFrame(), None, None
+        return pd.DataFrame(), None, None, None
+    except ValueError as ve:
+        print(f"Valor inválido encontrado: {ve}")
+        return pd.DataFrame(), None, None, None
 
 @app.route('/chat_with_data', methods=['POST'])
 def api_chat_with_data():
@@ -100,7 +108,10 @@ def api_chat_with_data():
     
     print(f"Dados recebidos - CNPJ: {cnpj}, Email: {email}, Prompt: {prompt}, empresaId: {empresaId}")  # Debug print
     
-    df, cliente_id, nome_cliente = fetch_data(cnpj, email, empresaId)
+    df, cliente_id, nome_cliente, empresaId = fetch_data(cnpj, email, empresaId)
+    
+    if cliente_id is None:
+        return jsonify({"error": "clienteId não encontrado"}), 404
     
     print(f"ClienteId DE BAIXO: {cliente_id}")
     print(f"Nome Cliente DE BAIXO: {nome_cliente}")
@@ -116,7 +127,7 @@ def api_chat_with_data():
     result = chat_with_data(df, prompt)
     
     # Código para enviar a resposta ao endpoint
-    post_url = "http://172.19.0.10:8080/V1/api/conversa/create"
+    post_url = "http://192.168.0.105:8080/V1/api/conversa/create"
     post_body = {
         "pergunta": prompt,
         "resposta": result,
