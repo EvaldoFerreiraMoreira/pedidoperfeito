@@ -1,5 +1,5 @@
 # Use uma versão específica do Python para garantir compatibilidade
-FROM python:3.11.9-alpine
+FROM python:3.11
 
 # Define o diretório de trabalho no contêiner
 WORKDIR /app
