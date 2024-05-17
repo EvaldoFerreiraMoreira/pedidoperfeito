@@ -46,9 +46,9 @@ def chat_with_data(df, prompt):
 
 def fetch_data(cnpj, email, empresaId):
     print(f"Recebendo dados para CNPJ: {cnpj}, Email: {email}")
-
-    config_url = f"http://172.19.0.10:8080/V1/api/empresa/findconfiguracaobyempresaid/{empresaId}"
-    find_urls = f"http://172.19.0.10:8080/V1/api/api/findbyempresa/{empresaId}"
+    #
+    config_url = f"http://192.168.0.105:8080/V1/api/empresa/findconfiguracaobyempresaid/{empresaId}"
+    find_urls = f"http://192.168.0.105:8080/V1/api/api/findbyempresa/{empresaId}"
 
     try:
         config_response = requests.get(config_url)
@@ -63,6 +63,7 @@ def fetch_data(cnpj, email, empresaId):
 
         clientes = data_json.get('dados', [])
         if not clientes:
+            print("CLIENTE AQUI: ", clientes)
             raise ValueError("Nenhum cliente encontrado")
 
         cliente = clientes[0]
@@ -127,7 +128,7 @@ def api_chat_with_data():
     result = chat_with_data(df, prompt)
     
     # Código para enviar a resposta ao endpoint
-    post_url = "http://172.19.0.10:8080/V1/api/conversa/create"
+    post_url = "http://192.168.0.105:8080/V1/api/conversa/create"
     post_body = {
         "pergunta": prompt,
         "resposta": result,
